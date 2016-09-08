@@ -48,24 +48,24 @@
 
   *Definition Table*
 
-  |Metadata defination table name| Description |
-  |:-----------------------------|--------------------------|
-  |ModuleDef|包含了Module的入口(entry)，这个入口有包括了module的文件名，后缀名，versionID|
-  |TypeDef|包含了每个Type的入口，而每个入口又包括了Type的name，基类型，访问限制(public,private ..),同时还包括了在其他表中的索引(MethodDef,FieldDef,PropertyDef以及EventDef)|
-  |MethodDef|Module中每个Method的入口，入口包括method name，flags(public，private,abstract, virtual,static,final etc..),以及在IL Code中可以找到该方法的位置。同时每个Entry还包括了ParamDef的信息，详细的定义了Method的parameters信息|
-  |FieldDef|Module中每个field的entry，包括了field的name，type以及flags|
-  |ParamDef|Module中每个parameter的entry，包括了parameter的name，type以及flags(in,out，retval etc)|
-  |PropertyDef|property entry|
-  |EventDef|event entry|
+  Metadata defination table name| Description 
+  :-----------------------------|--------------
+  ModuleDef|包含了Module的入口(entry)，这个入口有包括了module的文件名，后缀名，versionID
+  TypeDef|包含了每个Type的入口，而每个入口又包括了Type的name，基类型，访问限制(public,private..),同时还包括了在其他表中的索引(Methodef,FieldDef,PropertyDef以及EventDef)
+  MethodDef|Module中每个Method的入口，入口包括method name，flags(public，private,abstract, virtual,static,final etc..),以及在IL Code中可以找到该方法的位置。同时每个Entry还包括了ParamDef的信息，详细的定义了Method的parameters信息
+  FieldDef|Module中每个field的entry，包括了field的name，type以及flags
+  ParamDef|Module中每个parameter的entry，包括了parameter的name，type以及flags(in,out，retval etc)
+  PropertyDef|property entry
+  EventDef|event entry
 
   *Reference Table*
 
-  |Metadata Reference Table name| Description|
-  |:----------------------------|-------------------------|
-  |AssemblyDef|Module中引用的每个assembly的entry，Contains one entry for each assembly referenced by the module. Each entry includes the information necessary to bind to the assembly: the assembly’s name (without path and extension), version number, culture,and public key token (normally a small hash value generated from the publisher’s public key, identifying the referenced assembly’s publisher). Each entry also contains some flags and a hash value. This hash value was intended to be a checksum of the referenced assembly’s bits. The CLR completely ignores this hash value and will probably continue to do so in the future.|
-  |ModuleRef|Contains one entry for each PE module that implements types referenced by this module. Each entry includes the module’s file name and extension (without path). This table is used to bind to types that are implemented in different modules of the calling assembly’s module.|
-  |TypeRef|Contains one entry for each type referenced by the module. Each entry includes the type’s name and a reference to where the type can be found. If the type is implemented within another type, the reference will indicate a TypeRef entry. If the type is implemented in the same module, the reference will indicate a ModuleDef entry. If the type is implemented in another module within the calling assembly, the reference will indicate a ModuleRef entry. If the type is implemented in a different assembly, the reference will indicate an AssemblyRef entry.|
-  |MemberRef|Contains one entry for each member (fields and methods, as well as property and event methods) referenced by the module. Each entry includes the member’s name and signature and points to the TypeRef entry for the type that defines the member|
+  Metadata Reference Table name| Description
+  :----------------------------|-----------
+  AssemblyDef|Module中引用的每个assembly的entry，Contains one entry for each assembly referenced by the module. Each entry includes the information necessary to bind to the assembly: the assembly’s name (without path and extension), version number, culture,and public key token (normally a small hash value generated from the publisher’s public key, identifying the referenced assembly’s publisher). Each entry also contains some flags and a hash value. This hash value was intended to be a checksum of the referenced assembly’s bits. The CLR completely ignores this hash value and will probably continue to do so in the future.
+  ModuleRef|Contains one entry for each PE module that implements types referenced by this module. Each entry includes the module’s file name and extension (without path). This table is used to bind to types that are implemented in different modules of the calling assembly’s module.
+  TypeRef|Contains one entry for each type referenced by the module. Each entry includes the type’s name and a reference to where the type can be found. If the type is implemented within another type, the reference will indicate a TypeRef entry. If the type is implemented in the same module, the reference will indicate a ModuleDef entry. If the type is implemented in another module within the calling assembly, the reference will indicate a ModuleRef entry. If the type is implemented in a different assembly, the reference will indicate an AssemblyRef entry.
+  MemberRef|Contains one entry for each member (fields and methods, as well as property and event methods) referenced by the module. Each entry includes the member’s name and signature and points to the TypeRef entry for the type that defines the member
 
   使用ILDASM可以查看上面提的的table的具体详细信息
   > To see the metadata in a nice, human-readable form, select the View/MetaInfo/Show! menu item (or press Ctrl+M)
@@ -77,11 +77,11 @@
 
   >To summarize, an assembly is a unit of reuse, versioning, and security. It allows you to partition your types and resources into separate files so that you, and consumers of your assembly, get to determine which files to package together and deploy. After the CLR loads the file containing the manifest, it can determine which of the assembly’s other files contain the types and resources the application is referencing. Anyone consuming the assembly is required to know only the name of the file containing the manifest; the file partitioning is then abstracted away from the consumer and can change in the future without breaking the application’s behavior
 
-  |Manifest Metadata Table Name| Description|
-  |:---------------------------|-------------------------|
-  |AssemblyDef |Contains a single entry if this module identifies an assembly. The entry includes the assembly’s name (without path and extension), version (major, minor, build, and revision), culture,flags, hash algorithm, and the publisher’s public key (which can be null).
-  |FileDef | Contains one entry for each PE and resource file that is part of the assembly (except the file containing the manifest because it appears as the single entry in the AssemblyDef table).The entry includes the file’s name and extension (without path), hash value, and flags. If this assembly consists only of its own file, the FileDef table has no entries.|
-  |ManifestResourceDef| Contains one entry for each resource that is part of the assembly. The entry includes the resource’s name, flags (public if visible outside the assembly and private otherwise), and an index into the FileDef table indicating the file that contains the resource file or stream. If the resource isn’t a stand-alone file (such as a .jpg or a .gif), the resource is a stream contained within a PE file. For an embedded resource, the entry also includes an offset indicating the start of the resource stream within the PE file.|
+  Manifest Metadata Table Name| Description
+  :---------------------------|-------------------------
+  AssemblyDef |Contains a single entry if this module identifies an assembly. The entry includes the assembly’s name (without path and extension), version (major, minor, build, and revision), culture,flags, hash algorithm, and the publisher’s public key (which can be null).
+  FileDef | Contains one entry for each PE and resource file that is part of the assembly (except the file containing the manifest because it appears as the single entry in the AssemblyDef table).The entry includes the file’s name and extension (without path), hash value, and flags. If this assembly consists only of its own file, the FileDef table has no entries.
+  ManifestResourceDef| Contains one entry for each resource that is part of the assembly. The entry includes the resource’s name, flags (public if visible outside the assembly and private otherwise), and an index into the FileDef table indicating the file that contains the resource file or stream. If the resource isn’t a stand-alone file (such as a .jpg or a .gif), the resource is a stream contained within a PE file. For an embedded resource, the entry also includes an offset indicating the start of the resource stream within the PE file.
   |ExportedTypesDef| Contains one entry for each public type exported from all of the assembly’s PE modules. The entry includes the type’s name, an index into the FileDef table (indicating which of this assembly’s files implements the type), and an index into the TypeDef table. Note: To save file space, types exported from the file containing the manifest are not repeated in this table because the type information is available using the metadata’s TypeDef table|
 
   C# 编译器使用下面这些 target时，/t[arget]:exe, /t[arget]:winexe, /t[arget]: appcontainerexe, /t[arget]:library, or /t[arget]:winmdobj
@@ -102,9 +102,9 @@
   build assembly的时候，需要指定assembly的一些信息，使用VS开发C#的应用，默认会生成一个 *AssemblyInfo.cs* 文件，里面包含了Assembly的信息，直接修改这个文件里面的内容即可。
   关于VesionNumber的定义
 
-  |     |Major Version|Minor Version|Build Number|Revision Number|
-  |-----|-------------|-------------|------------|---------------|
-  |example|2|1|789|2|
+       |Major Version|Minor Version|Build Number|Revision Number
+  -----|-------------|-------------|------------|---------------
+  example|2|1|789|2
 
   Major Version 和 Minor Version比较好理解也是我们经常使用到的，关于这个Build Number和Revision Number可以这样理解，如果这个Assembly每天都会build，那么Build Number就需要每一天增加1，而Revision Number则是当每天build的次数不止一次的时候使用，表示当天build的次数。
 
