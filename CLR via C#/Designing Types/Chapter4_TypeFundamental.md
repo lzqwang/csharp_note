@@ -44,6 +44,7 @@ Finalize |This virtual method is called when the garbage collector determines th
     return impObj;
   }
   ```
+  
   对于上面的代码，在编译的时候可以通过，但是在运行时，会去判断obj的Type是否是Implement或者其子类，如果不是的话，cast failed，throw exception
   另外建议修改上面Method的参数类型为 Implement，这样在编译时就可以check到一些非法转换而不需要等到运行时。
   经常使用到一个Cast Type的例子如下，参数类型为Stream，但是在实际中，是不能直接new一个stream对象的，但是作为stream对象的子类FileStream， MemoryStream等则可以被new出来，这样直接将子类对象传入函数中，无需显式的Cast Type
@@ -53,6 +54,7 @@ Finalize |This virtual method is called when the garbage collector determines th
     //manipulate the stream content
   }
   ```
+  
 ### Casting with C# *is* or *as* operators
 
   C#中提供了两个操作符来进行Casting相关的操作
@@ -80,6 +82,7 @@ Finalize |This virtual method is called when the garbage collector determines th
       {}                              {}
     }                               }
   ```
+  
   解决这个问题， 使用using声明的时候加以区分就可以了
 
   ```
@@ -93,7 +96,8 @@ Finalize |This virtual method is called when the garbage collector determines th
         BBCF.staticMethod();
       }
     }
-    ```
+  ```
+  
   下面这种case更特殊一些，如果引用的两个dll中namespace和type都相同
 
   ```
@@ -102,7 +106,8 @@ Finalize |This virtual method is called when the garbage collector determines th
       class Foo                       class Foo
       {}                              {}
     }                               }
-    ```
+  ```
+  
   这个问题其实比较罕见的，但是解决方法不算麻烦，需要使用 extern alias
   首先在reference的propert界面，给reference修改一下aliase,重名的references都需要改
 
@@ -121,7 +126,8 @@ Finalize |This virtual method is called when the garbage collector determines th
         aliY.namespace.class.staticMethod();
       }
     }
-    ```
+  ```
+
   说了这么多Namespace，那么namespace和assembly究竟关系几何，其实2者没有什么必要联系，你想啊CLR压根就不知道有namespace这东西，所以从底层来说，这哥俩八杆子打不着
   在VS中可以看到这两个value可以分别赋值，互不影响
 
