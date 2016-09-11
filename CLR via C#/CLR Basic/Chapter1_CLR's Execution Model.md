@@ -1,4 +1,27 @@
-old content here
+### CLR's execution model 
+
+  既然是要介绍.NET Framework，说明读者选择了.NET Framework作为开发平台，这是开始编程的第一步。
+  然后呢，需要选择编程语言，不同的编程语言会有不同的能力，比如说，使用非托管的C/C++可以更接近于底层系统
+
+> have low-level control of the system
+
+  而托管的语言则有不同的侧重倾向，或主攻UI方向，或者善于与COM objects或者数据库打交道
+  CLR-- Common language runtime -- 公共语言运行时 -- 顾名思义，可以被多管理种编程语言运用，CLR提供了诸多公共的功能和机制，
+  比如内存分配管理，线程机制，异常处理等等。但是CLR其实是不关注什么编程语言也不无需要关心，因为不管是什么编程语言最后到CLR上运行的时候，都需要编译成CLR能理解能运行的模块-- execution model。
+  既然CLR跟编程语言无关，那么怎么决定编程语言的优劣之分呢
+  作者认为主要是语言的编译器和分析器，编程语言都会制定自己的一套语法，编译器负责将按照规定语言编写的程序编译成CLR可以运行的代码
+  好的编程语言大概就是那些可以将source code准确的编程，对于source code中的错误找出来并给出相应的修改建议。
+
+> So, what is the advantage of using one programming language over another?
+Well, I think of compilers as syntax checkers and “correct code” analyzers. They examine your source
+code, ensure that whatever you’ve written makes some sense, and then output code that describes
+your intention.
+
+先不谈编程语言的优劣之分，重点放在execution model上，不同的语言通过各自编译器的被编译成Managed module
+
+> A managed module is a standard 32-bit Windows portable executable (PE32) file or a standard 64-bit Windows portable executable (PE32+) file that requires the CLR to execute
+> By the way, managed assemblies always take advantage of Data Execution Prevention(DEP) and Address Space Layout Randomization (ASLR) in Windows; these two features improve the security of your whole system.
+
 ![Compiling source code into managed module](https://raw.githubusercontent.com/lzqwang/csharp_note/master/CLR%20via%20C%23/screenshot/compiling%20source%20code%20into%20managed%20model.png)
 
   managed module的组成部分包括 PE32/PE32+ header, CLR header, IL Code 以及 Metadata.
