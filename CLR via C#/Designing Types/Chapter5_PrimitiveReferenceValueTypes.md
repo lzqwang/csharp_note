@@ -181,4 +181,166 @@ checked{
   }
 }
 ```
-这个方法只是判断两个object是否指向同一为内存位置，这个equals 成为 identity，而不是 value equality
+  这个方法只是判断两个object是否指向同一为内存位置，这个equals 成为 identity，而不是 value equality.
+  下面这个方法是理想的Equals的实现
+```
+public class Object {
+  public virtual Boolean Equals(Object obj) {
+    // The given object to compare to can't be null
+    if (obj == null) return false;
+    // If objects are different types, they can't be equal.
+    if (this.GetType() != obj.GetType()) return false;
+    // If objects are same type, return true if all of their fields match
+    // Because System.Object defines no fields, the fields match
+    return true;
+  }
+}
+```
+  但是由于CLR没有这么实现Equals方法，而Equals方法本身是可以被子类重写的，所以这个System.Object的Equals方法就不再会被使用，为了解决这个问题，System.Object 提供了一个静态方法, 用来判断 identity
+```
+public class Object {
+  public static Boolean ReferenceEquals(Object objA, Object objB) {
+    return (objA == objB);
+  }
+}
+```
+> You should always call ReferenceEquals if you want to check for identity (if two references point to the same object).
+You shouldn’t use the C# == operator (unless you cast both operands to Object first) because one of the operands’ types could overload the == operator, giving it semantics other than identity
+
+  System.ValueType 重写了Object的Equals 方法，提供了判断Value Equality的方式
+  在判断的过程中有一步需要调用Type中包含的fields的Equals方法，实现这个逻辑使用到了Reflection，所以在一定程度上对效率会造成影响。所以建议读者在实现自己的Value Type的Equals方法时，不要调用Base.Equals.
+  Equals四个属性
+  * reflexive -- 自反,反身  x.Equals(x) is  true
+  * symmetric -- 对称 x.Equals(y) and y.Equals(x) 结果相同
+  * transitive -- 传递 x.Equals(y) is true, y.Equals(z) is true, then x.Equals(z) must return true
+  * consistent -- 一致性 对比的两个值在比较的过程中不能被改变，而且返回值必须是true or false
+
+  另外，还有两点关于Equals的
+  1. Have the type implement the System.IEquatable<T> interface’s Equals method -- 实现IEquatable<T> 接口，这个接口支持泛型，在调用的时候可以省去类型转换这一步，对于Value Type来说，省去了boxing/unboxing 的开销，所以更推荐使用
+  2. 运算符重载 == 和 != ,使用重写的Equals方法来进行运算符重载
+
+
+## Object Hash Codes
+
+  CLR提供了一个虚函数用来 GetHashCode， 同时建议如果重写了Equals方法那么也需要重写GetHashCode ，原因是对于Equals的两个对象来说，他们的HashCode也应该是相同的
+  实现HashCode的几个原则
+  * 使用一个好的随机分配的算法，提高Hash Table的效率
+  * 可以调用基类的GetHashCode的方法，但是不建议调用Object和ValueType的
+  * 实现的算法里至少要用到一个实例成员(instance field)
+  * 使用到的instance field应该是恒定的，初始化的时候就有值，而且这个值在整个对象的生命周期中不再改变
+  * 算法应该执行的越快越好
+  * 具有相同value的对象返回的HashCode必须一样
+
+  GetHashCode 取得的value不可以保存起来用于之后的逻辑，尤其是.NET Framework中提供的实现，因为随着版本的更新，GetHashCode的算法可能会改变，导致hashcode的值与之前缓存的出现不同
+
+## The dynamic Primitive Type
+
+  dynamic 提供了一种运行时获取Type实际类型的方式
+  > you cannot write methods whose signature differs only by dynamic and Object
+
+  不可以用dynamic和Object来区分两个method
+
+  dynaic 声明的field，method parameter以及 method return type，在编译的时候, 编译器会把这种类型转成Object同时加一个 属性，但是
+  > compiler converts this type to the System.Object type and applies an instance of System.Runtime.CompilerServices.DynamicAttribute to the field, parameter, or return type in metadata
+
+  dynamic和var的区别
+
+  > You cannot cast an expression to var but you can cast an expression to dynamic. You must explicitly initialize a variable declared using var, whereas you do not have to initialize a variable declared with dynamic.
+
+  下面两段代码
+  ```
+    // use dynamic
+    dynamic expObj = sender as ExpandoObject;
+    Console.WriteLine("Name:{0}", expObj.Name); // expObj is a dynamic object， Name will be resolved at run time, no error occur in compile time
+    // use var
+    var expObj = sender as ExpandoObject;
+    Console.WriteLine("Name:{0}", expObj.Name);  // Compile failed  
+  ```
+  使用var声明的dynamic对象，编译时会报错
+  
+  > Error：'System.Dynamic.ExpandoObject' does not contain a definition for 'Name' and no extension method 'Name' accepting a first argument of type //'System.Dynamic.ExpandoObject' could be found (are you missing a using directive or an assembly reference?)
+
+  dynamic 由于是运行时执行，所以需要在运行时中有一个 runtime binders 来获知dynamic所对应的实际type，在C#中 runtime binders存在于 Microsoft.CSharp.dll，这个dll在 csc.rsp文件中默认会引用。而这个dll又会引用System.dll以及System.Core.dll 如果涉及到与COM 对象的交互还会引用 System.Dynamic.dll
+
+  > And when the payload code executes, it generates dynamic code at run time; this code will be in an in-memory assembly called “Anonymously Hosted DynamicMethods Assembly.” The purpose of this code is to improve the performance of dynamic dispatch in scenarios where a particular call site is making many invocations using dynamic arguments that have the same runtime type.
+
+  运行时执行 dynamic code实在内存中的“Anonymously Hosted DynamicMethods Assembly.” 这样做是为了提升效率。
+
+  尽管如此，可以看到使用dynamic的开销还是存在的，所以在使用dynamic的时候 要考虑到效率的问题，是否必须要使用dynamic。
+
+  > One of the limitations of dynamic is that you can only use it to access an object’s instance members because the dynamic variable must refer to an object.
+
+  dynamic的一个限制是，只能访问Object的instance members，包括变量，属性以及方法，但是对于static的方法属性则无法使用，作者写了一个类来实现了这个功能，其中用到了reflection来实现。
+  ```
+internal sealed class StaticMemberDynamicWrapper : DynamicObject {  //继承自DynamicObject，重写其中的虚方法，在重写的方法中利用反射去获取到static的members
+    private readonly TypeInfo m_type;
+    public StaticMemberDynamicWrapper(Type type) { m_type = type.GetTypeInfo(); }
+    public override IEnumerable<String> GetDynamicMemberNames() {
+      return m_type.DeclaredMembers.Select(mi => mi.Name);
+    }
+    public override Boolean TryGetMember(GetMemberBinder binder, out object result) {
+      result = null;
+      var field = FindField(binder.Name);
+      if (field != null) { result = field.GetValue(null); return true; }
+      var prop = FindProperty(binder.Name, true);
+      if (prop != null) { result = prop.GetValue(null, null); return true; }
+      return false;
+    }
+    public override Boolean TrySetMember(SetMemberBinder binder, object value) {
+      var field = FindField(binder.Name);
+      if (field != null) { field.SetValue(null, value); return true; }
+      var prop = FindProperty(binder.Name, false);
+      if (prop != null) { prop.SetValue(null, value, null); return true; }
+      return false;
+    }
+    public override Boolean TryInvokeMember(InvokeMemberBinder binder, Object[] args,  out Object result) {
+      MethodInfo method = FindMethod(binder.Name);
+      if (method == null) { result = null; return false; }
+      result = method.Invoke(null, args);
+      return true;
+    }
+    private MethodInfo FindMethod(String name, Type[] paramTypes) {
+      return m_type.DeclaredMethods.FirstOrDefault(mi => mi.IsPublic && mi.IsStatic
+      && mi.Name == name
+      && ParametersMatch(mi.GetParameters(), paramTypes));
+    }
+    private Boolean ParametersMatch(ParameterInfo[] parameters, Type[] paramTypes) {
+      if (parameters.Length != paramTypes.Length) return false;
+      for (Int32 i = 0; i < parameters.Length; i++)
+      if (parameters[i].ParameterType != paramTypes[i]) return false;
+      return true;
+    }
+    private FieldInfo FindField(String name) {
+      return m_type.DeclaredFields.FirstOrDefault(fi => fi.IsPublic && fi.IsStatic && fi.Name == name);
+    }
+    private PropertyInfo FindProperty(String name, Boolean get) {
+      if (get)
+      return m_type.DeclaredProperties.FirstOrDefault(
+      pi => pi.Name == name && pi.GetMethod != null &&
+      pi.GetMethod.IsPublic && pi.GetMethod.IsStatic);
+      return m_type.DeclaredProperties.FirstOrDefault(
+      pi => pi.Name == name && pi.SetMethod != null &&
+      pi.SetMethod.IsPublic && pi.SetMethod.IsStatic);
+    }
+}
+  ```
+
+### ExpandoObject
+
+  ExpandoObject是 System.Core.dll中提供的一个类，可以在运行时为这个object添加members
+
+  ```
+    // Summary:
+    //     Represents an object whose members can be dynamically added and removed at
+    //     run time.
+    public sealed class ExpandoObject : IDynamicMetaObjectProvider, IDictionary<string, object>, ICollection<KeyValuePair<string, object>>, IEnumerable<KeyValuePair<string, object>>, IEnumerable, INotifyPropertyChanged
+    {
+        // Summary:
+        //     Initializes a new ExpandoObject that does not have members.
+        public ExpandoObject();
+    }
+  ```
+
+  reference:[Building C# objects dynamically](https://www.oreilly.com/learning/building-c-objects-dynamically)
+
+  使用ExpandoObject跟写js的感觉差不多了，省去了定义声明初始化的一些逻辑，但是对内存和效率以及程序的稳定性健壮性有一定的影响，所以在使用之前还好应该根据实际情况来权衡下利弊。

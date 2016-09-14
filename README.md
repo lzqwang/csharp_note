@@ -1,1 +1,1 @@
-# This repository contains the node of the C# BookClass
+# This repository contains the note of the C# BookClass
