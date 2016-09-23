@@ -112,5 +112,94 @@
 
 ## Operator Overload Methods
 
-    运算符重载的方法
-    
+  运算符重载的方法
+  运算符重载规定方法必须是 public and static
+  CLR中并不支持运算符重载，所以这些都是C#编译器的功劳，下面两表是C# 中可重载的运算符
+  C# Unary Operators and Their CLS-Compliant Method Names
+
+C# Operator Symbol| Special Method Name |Suggested CLS-Compliant Method Name
+--------|--------------|---------
+\+ |op_UnaryPlus| Plus
+\- |op_UnaryNegation |Negate
+!| op_LogicalNot |Not
+~ |op_OnesComplement |OnesComplement
+++ |op_Increment |Increment
+-- |op_Decrement |Decrement
+(none)| op_True |IsTrue { get; }
+(none)| op_False |IsFalse { get; }
+
+C# Binary Operators and Their CLS-Compliant Method Names
+
+C# Operator Symbol| Special Method Name |Suggested CLS-Compliant Method Name
+-----------|-------------|----------
+\+ |op_Addition| Add
+\- |op_Subtraction |Subtract
+\* |op_Multiply |Multiply
+/ |op_Division| Divide
+% |op_Modulus| Mod
+& |op_BitwiseAnd |BitwiseAnd
+\|| op_BitwiseOr |BitwiseOr
+^ |op_ExclusiveOr |Xor
+<< |op_LeftShift |LeftShift
+>> | op_RightShift |RightShift
+==| op_Equality |Equals
+!|  op_Inequality |Equals
+<| op_LessThan |Compare
+>| op_GreaterThan |Compare
+<=| op_LessThanOrEqual| Compare
+>=| op_GreaterThanOrEqual |Compare
+
+  除了运算符重载，C#中还提供了类型转换重载方法
+  默认的C#中的一些基本类型可以进行隐式或者显式的类型转换，对已自定义的Type，也可以自己实现这两种方式的转换
+  > method. In C#, you use the implicit keyword to indicate to the compiler that an explicit cast doesn’t have to appear in the source code in order to
+emit code that calls the method. The explicit keyword allows the compiler to call the method only when an explicit cast exists in the source code.
+
+  使用 implicit 来声明可以隐式转换的方法， 使用 explicit来声明需要显式转换的方法
+  下面看例子
+```
+public sealed class Rational {
+    // Constructs a Rational from an Int32
+    public Rational(Int32 num) { ... }
+    // Constructs a Rational from a Single
+    public Rational(Single num) { ... }
+    // Converts a Rational to an Int32
+    public Int32 ToInt32() { ... }
+    // Converts a Rational to a Single
+    public Single ToSingle() { ... }
+    // Implicitly constructs and returns a Rational from an Int32
+    public static implicit operator Rational(Int32 num) {
+      return new Rational(num);
+    }
+    // Implicitly constructs and returns a Rational from a Single
+    public static implicit operator Rational(Single num) {
+      return new Rational(num);
+    }
+    // Explicitly returns an Int32 from a Rational
+    public static explicit operator Int32(Rational r) {
+      return r.ToInt32();
+    }
+    // Explicitly returns a Single from a Rational
+    public static explicit operator Single(Rational r) {
+      return r.ToSingle();
+    }
+}
+
+// How to use the methods
+
+public sealed class Program {
+  public static void Main() {
+    Rational r1 = 5; // Implicit cast from Int32 to Rational
+    Rational r2 = 2.5F; // Implicit cast from Single to Rational
+    Int32 x = (Int32) r1; // Explicit cast from Rational to Int32
+    Single s = (Single) r2; // Explicit cast from Rational to Single
+  }
+}
+```
+> the metadata for the four conversion operator methods looks like this.
+public static Rational op_Implicit(Int32 num)
+public static Rational op_Implicit(Single num)
+public static Int32 op_Explicit(Rational r)
+public static Single op_Explicit(Rational r)
+
+   注意上面最后的两个方法，只有返回类型不同，这种语法在CLR中是支持的，但是在大多数编程语言中是不支持的包括c#
+   当使用显式类型转换的时候，C#会生成调用显式类型转换的方法，但是在使用as  和 is的时候不会。
