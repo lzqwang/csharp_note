@@ -121,5 +121,50 @@ var t = Tuple.Create(0, 1, 2, 3, 4, 5, 6, Tuple.Create(7, 8));
 Console.WriteLine("{0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}",t.Item1, t.Item2, t.Item3, t.Item4, t.Item5, t.Item6, t.Item7,
 t.Rest.Item1.Item1, t.Rest.Item1.Item2);  // 注意这里t.Rest.Item1 是因为Rest是一个Tuple<T1> 类型
 ```
-  
+
   另外还有一个 System.Dynamic.ExpandoObject 对象， 可以在运行时添加删除属性
+
+## Parameterful Properties
+
+  上面介绍的Properties作为方法是没有参数的，所以作者称之为无参属性，而与之对应的有参属性，又被称为索引器
+  索引器提供的语法类似于数组, 使用[] ，就像是C#提供的对[]的运算符重载
+  索引器至少有一个参数，参数类型可以是除了void之外的 data type，另外索引器可以有多个参数
+  > An example of an indexer that has more than one parameter can be found in the System.Drawing.Imaging.ColorMatrix class, which ships in the System.Drawing.dll assembly.
+
+  索引器不能仅靠返回类型来区分参数类型相同的方法
+
+```
+Class CustomDictionary
+{
+  public string this[Int32 index]                        //Error	1	The type 'App.CustomDictionary' already contains a definition for 'Item'
+  {
+    // At least one accessor method is defined here
+  }
+  public int this[string value]                         //Error	2	The type 'App.CustomDictionary' already contains a definition for 'Item'
+  {
+    // At least one accessor method is defined here
+  }
+  public string Item(int index)
+  {
+    // to do...
+  }
+}   
+```
+  编译上面代码会失败，提示当前Type中已经定义了Item
+  使用IndexerName 属性可以为索引器方法命名，如下
+```     
+public sealed class BitArray {
+  [IndexerName("Bit")]               //默认的索引器没有指定方法名，编译器在编译的时候默认使用Item作为方法名，如果
+  public string this[Int32 index]                       
+  {
+    // At least one accessor method is defined here
+  }
+
+  [IndexerName("Bit")]               //如果一个Type中定义了多个索引器，需要保证所有索引器的IndexerName是相同的，否则编译出错
+  public int this[string value]
+  {
+    // At least one accessor method is defined here
+  }
+}
+```
+> Remember, C# won’t compile the code if it contains parameterful properties with different names
