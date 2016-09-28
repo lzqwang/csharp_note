@@ -203,3 +203,103 @@ public static Single op_Explicit(Rational r)
 
    注意上面最后的两个方法，只有返回类型不同，这种语法在CLR中是支持的，但是在大多数编程语言中是不支持的包括c#
    当使用显式类型转换的时候，C#会生成调用显式类型转换的方法，但是在使用as  和 is的时候不会。
+
+## Extension methods
+
+> what C#’s extension methods feature does. It allows you to define a static method that you can invoke using instance method syntax.
+
+  C#拓展方法，允许开发者自定义可以被对象调用的静态方法
+
+```
+public static class StringBuilderExtensions {
+  public static Int32 IndexOf(this StringBuilder sb, Char value) {
+    for (Int32 index = 0; index < sb.Length; index++)
+    if (sb[index] == value) return index;
+    return -1;
+  }
+}
+```
+需要在static class中定义 static 方法，并且需要在方法中为第一个参数 加上 this，
+编译器在编译代码时，当遇到一个对象调用了一个方法，首先会查找对象的Type中是否定义了该方法，如果有则调用，如果没有，则去static class中查找static的方法，该方法的第一个参数需要于此Type相同并且有this关键字标识
+VS的智能提示会显式出拓展方法，并且在tooltip中会提示该方法是拓展的，这样在开发的过程中就可以很自然很方便的使用拓展方法了
+
+### Rule and  Guideline
+
+* C#中只有拓展方法，没有拓展属性拓展事件等等
+* 拓展方法需要定义在非泛型静态的类中，对类名没有要求，对于方法要求最少有一个参数，而且只有第一个参数可以用this修饰
+* 拓展方法不能定义在一个内部类中
+* 为了提高效率，需要在使用拓展方法的类中，添加拓展方法所在的类的引用，使用 using classNamespace
+* 如果不同的类中定义了相同的拓展方法，那么当对象调用这个方法的时候，编译器会出错，需要修改方法名使得两个拓展方法区别开，否则不能使用对象直接调用，只能显式的使用静态类来调用
+* 有节制的使用拓展方法，因为拓展方法可以被一个类及其子类调用，如果给System.Object添加一个拓展方法，那么所有的类都会有这个方法，VS的智能提示会被此污染
+* 拓展方法的一个versioning issue，如果在未来的版本中拓展的类本身实现了拓展方法，那么拓展方法将不会被调用，而是直接调用类中定义的方法
+
+  拓展方法和正常的方法有一点区别在于，当调用的对象是null的时候，对于普通方法，会在进入方法之前就抛异常，而拓展方法则是在进入了方法内部之后才抛异常
+  除了为类添加拓展方法，还可以为其他类型添加拓展方法
+  1. 为接口添加拓展方法
+```
+public static void ShowItems<T>(this IEnumerable<T> collection) {
+  foreach (var item in collection)
+  Console.WriteLine(item);
+}
+
+//invoke
+public static void Main() {
+  // Shows each Char on a separate line in the console
+  "Grant".ShowItems();
+  // Shows each String on a separate line in the console
+  new[] { "Jeff", "Kristin" }.ShowItems();
+  // Shows each Int32 value on a separate line in the console
+  new List<Int32>() { 1, 2, 3 }.ShowItems();
+}
+```
+  *System.Linq.Enumerable* 是关于拓展方法的一个很好的应用，对 *IEnumerable<T>* 进行拓展
+ 2. 为委托添加拓展方法
+```
+public static void InvokeAndCatch<TException>(this Action<Object> d, Object o)
+where TException : Exception {
+  try { d(o); }
+  catch (TException) { }
+}
+//And here is an example of how to invoke it.
+Action<Object> action = o => Console.WriteLine(o.GetType()); // Throws NullReferenceException
+action.InvokeAndCatch<NullReferenceException>(null); // Swallows NullReferenceException
+```
+3. 为枚举添加拓展方法，在枚举的章节详细介绍
+
+  另外C#编译器可以声明一个委托指向对象的拓展方法
+```
+public static void Main () {
+  // Create an Action delegate that refers to the static ShowItems extension method
+  // and has the first argument initialized to reference the "Jeff" string.
+  Action a = "Jeff".ShowItems;
+  .
+  .
+  .
+  // Invoke the delegate that calls ShowItems passing it a reference to the "Jeff" string.
+  a();
+}
+```
+
+### Extension attribute
+
+当定义了一个拓展方法，C#编译器默认的会在这个方法，方法所在的类 以及所在的程序集上加一个attribute
+```
+// Defined in the System.Runtime.CompilerServices namespace
+[AttributeUsage(AttributeTargets.Method | AttributeTargets.Class | AttributeTargets.Assembly)]
+public sealed class ExtensionAttribute : Attribute {
+}
+```
+通过这个attribute可以有助于编译器快速的查找拓展方法，上面的这个attribute定义在System.Core.dll 中，在编译的时候需要引用这个dll，即使代码中没有用到这个dll，但是在运行时不会再引用这个dll。
+
+## Partial Methods
+
+  Partial Methods的实现基于Partial Types, 但是与Partial Type又有所不同
+  patial method 由两部分 一个是声明一个是实现，声明部分没有方法体，实现部分才有
+  关于partial methods的 rule and  Guideline
+* partial methods只能定义在partial class或者strut中
+* partial methods的返回类型必须是void，参数中不能有out 类型的参数，可以有ref类型的，这里的限制主要是考虑到partial method可能不存在，在运行时使用会带来一些不必要的麻烦
+* partial methods的两个方法必须有相同的方法名，参数
+* 如果partial method的实现部分不存在，在代码中不能创建引用这个method的delegate
+* partial methods默认都是private的， 而且C#编译器禁止显式的声明partial method为private
+
+总的来说，分部类和分部方法应用的不是很广泛，除非一些特殊的情景，涉及到多人联合开发或者机器自动生成代码和人工后期实现的组合的时候可能会应用到
