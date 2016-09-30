@@ -42,8 +42,7 @@ public sealed class Employee {
   * 使用AIPs必须显式的为其进行初始化，
   * 需要序列化和反序列化的Type不要使用AIPs feature，因为编译器在序列化AIP的时候，会决定property的backing field的name，而且每次重新编译的话，这个name可能会改变
   * Debug的时候，不能在AIP上加断点
-
-  > For a single property, the AIP feature is an all-or-nothing deal.
+> For a single property, the AIP feature is an all-or-nothing deal.
 
   使用AIP feature，是需要同时指定get 和 set方法，否则这个Property没有实际意义
 
