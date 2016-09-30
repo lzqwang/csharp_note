@@ -1,4 +1,4 @@
-gio# Properties
+# Properties
 
 ## Parameterless Properties
 
@@ -168,3 +168,31 @@ public sealed class BitArray {
 }
 ```
 > Remember, C# won’t compile the code if it contains parameterful properties with different names
+
+
+## The Performance of Calling Property Accessor Methods
+
+  C#编译器在编译Properties时，会inline code， inline不会产生运行时的效率影响
+  > Inlining is when the code for a method (or accessor method, in this case) is compiled directly in the method that is making the call
+
+  因为Proeperties的get/set方法通常比较小，所以采用inline的方式，可以让native code更小，运行速度更快
+  另外注意，在Debug模式下，没有inline code，在Release模式时，会inline code
+
+## Property Accessor Accessibility
+
+  可以为Properties的get 和 set 方法指定不同的访问修饰符，通常的规则是get/set 方法的访问要比Properties 的严格
+```
+public class SomeType {
+  private String m_name;
+  public String Name {
+    get { return m_name; }
+    protected set {m_name = value; }
+  }
+}
+```
+
+## Generic Property Accessor Methods
+
+  泛型Properties在C#中是不支持的, Properties设计的本意是用来表示对象的一个特征，而不是作为一个行为，即以method的方式来实现field的效果
+  
+  > A property is supposed to represent a characteristic of an object that can be queried or set. Introducing a generic type parameter would mean that the behavior of the querying/setting could be changed, but conceptually, a property is not supposed to have behavior. If you want your object to expose some behavior—generic or not—define a method, not a property
