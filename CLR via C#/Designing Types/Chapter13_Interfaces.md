@@ -32,39 +32,13 @@
   但是千万不要整一个非泛型的class继承自泛型，然后再使用这个非泛型的class，这样做一来更罗嗦了，代码写着是简洁了但是逻辑确是冗余的，二来这个非泛型class和泛型class就不是同一个type了
 
 ## Generic Interfaces/ Delegates  
-> ■■ Invariant Meaning that the generic type parameter cannot be changed. I have shown only invariant generic type parameters so far in this chapter.
-  ■■ Contra-variant Meaning that the generic type parameter can change *from a class to a class derived from it*. In C#, you indicate contra-variant generic type parameters with the *in* keyword. Contra-variant generic type parameters can appear only in input positions such as a method’s argument.
-  ■■ Covariant Meaning that the generic type argument can change *from a class to one of its base classes*. In C#, you indicate covariant generic type parameters with the *out* keyword. Covariant generic type parameters can appear only in output positions such as a method’s return type.
-
   泛型可以用于接口和委托中，使得泛型的应用更加广泛
   在泛型接口/委托中，会出现in/ out ，这两个分别称为逆变(contra-variant)和协变 (covariant)
-  in -- contra-variant -- 一般用于方法参数中，表示传入的参数可以是声明类型的子类
-  out -- covariant 一般用于方法的返回值，表示传出的返回值可以是声明的类型的父类。
-  Contra-variant: 逆变-- in-- 可以将class变成其子类
-  Covariant: 协变，out-class可以变成其父类
+  in 一般用于方法参数中，表示传入的参数可以是声明类型的子类
+  out 一般用于方法的返回值，表示传出的返回值可以是声明的类型的父类。
+
   这样的设计，可以使得一套泛型接口/委托可以被更多的复用
   使用了in /out 的话，方法参数中就不能使用ref 和 out了
-
->In general, a covariant type parameter can be used as the return type of a delegate, and contravariant type parameters can be used as parameter types.
-For an interface, covariant type parameters can be used as the return types of the interface's methods, and contravariant type parameters can be used as the parameter types of the interface's methods.
-
-  in/out (逆变/协变) 应用在接口和委托上的时候效果是相反的
-
-  ```
-  // example of covariant
-  public interface IEnumerable<out T> : IEnumerable
-  // usage :
-  IEnumerable<Derived> d = new List<Derived>();
-  IEnumerable<Base> b = d;
-
-  // example of contra-variant
-  public interface IComparable<in T>
-  //usage :
-  IComparable<Base> b= new Base();
-  IComparable<Derived> d= b;
-  ```  
-
-
 
 ## Constraints
   * Primary Constraint  可以指定0/1 , 从 class or struct 中 2选1
