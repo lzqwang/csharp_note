@@ -8,10 +8,10 @@
 
 ## Generics in the Framework Class Library
 
-    > Microsoft recommends that programmers use the generic collection classes and now discourages use of the non-generic collection classes for several reasons. First, the non-generic collection classes are not generic, and so you don’t get the type safety, cleaner code, and better performance that you get when you use generic collection classes. Second, the generic classes have a better object model than the non-generic classes. For example, fewer methods are virtual, resulting in better performance,and new members have been added to the generic collections to provide new functionality.
+> Microsoft recommends that programmers use the generic collection classes and now discourages use of the non-generic collection classes for several reasons. First, the non-generic collection classes are not generic, and so you don’t get the type safety, cleaner code, and better performance that you get when you use generic collection classes. Second, the generic classes have a better object model than the non-generic classes. For example, fewer methods are virtual, resulting in better performance,and new members have been added to the generic collections to provide new functionality.
 
-    微软建议使用泛型的集合，首先非泛型的集合，失去了上面提到的使用泛型带来的好处，包括类型安全，代码整洁以及效率提升等
-    另外使用泛型类型比非泛型类型提供了更好的对象模型，在泛型类型中可以少用一些虚函数，提高了效率的同时也对代码进行了封装。
+  微软建议使用泛型的集合，首先非泛型的集合，失去了上面提到的使用泛型带来的好处，包括类型安全，代码整洁以及效率提升等
+  另外使用泛型类型比非泛型类型提供了更好的对象模型，在泛型类型中可以少用一些虚函数，提高了效率的同时也对代码进行了封装。
 
 ## Generics Infrastructure
 
