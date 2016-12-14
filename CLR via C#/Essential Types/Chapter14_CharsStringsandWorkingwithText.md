@@ -145,3 +145,117 @@ return count;
 ## Constructing a String Efficiently
 
 由于String 的immutable 恒定性， FCL 提供了另外一个Type StringBuilder 来更高效的创建String对象。注意这里只是用StringBuilder来创建String对象，至于方法参数中仍然要使用String。
+
+### Obtaining a String Representation of an Object: ToString
+
+ToString 方法用来显示string。
+
+```
+public interface IFormattable {
+  String ToString(String format, IFormatProvider formatProvider);
+}
+```
+ > IFormattable’s ToString method takes two parameters. The first, format, is a string that tells the method how the object should be formatted. ToString’s second parameter, formatProvider, is an instance of a type that implements the System.IFormatProvider interface. This type supplies specific culture information to the ToString method.
+
+ 第二参数主要是用来指定culture info
+
+ FCL中很多的type都提供了多种ToString format，常用的是DateTime 和 Number 类型的 format
+ DateTime type supports
+ * “d” for short date,
+ * “D” for long date,
+ * “g” for general,
+ * “M” for month/day,
+ * “s” for sortable,
+ * “T” for long time,
+ * “u” for universal time in ISO 8601 format,
+ * “U” for universal time in full date format,
+ * “Y” for year/month, and others
+
+ all of the built-in numeric types support
+ * “C” for currency,
+ * “D” for decimal,
+ * “E” for exponential(scientific) notation,
+ * “F” for fixed-point,
+ * “G” for general,
+ * “N” for number,
+ * “P” for percent,
+ * “R” for round-trip,
+ * “X” for hexadecimal
+
+ 使用 String.Format 方法和 StringBuilder 对象的 AppendFormat方法可以将多个对象，按照指定的格式输出。
+
+### Providing Your Own Custom Formatter
+
+可以自定义一个 formatter 可以自定义rule， 看下面的例子
+```
+class CustomFormatter : ICustomFormatter, IFormatProvider   //需要继承两个接口
+{
+    public string Format(string format, object arg, IFormatProvider formatProvider)
+    {
+        string s;
+        IFormattable formattable = arg as IFormattable;
+        if (formattable == null)
+        {
+            s = arg.ToString();
+        }
+        else
+        {
+            s = formattable.ToString(format, formatProvider);
+        }
+        if (arg.GetType() == typeof(Int32))
+        {
+            return String.Format("<B>{0}</B>", s);
+        }
+        else
+        {
+            return s;
+        }
+    }
+
+    public object GetFormat(Type formatType)   //  这个方法会先触发，根据formatType如果是customFormatter就返回，如果不是返回当前culture下的
+    {
+        if (formatType == typeof(ICustomFormatter))
+        {
+            return this;
+        }
+        else
+        {
+            return System.Threading.Thread.CurrentThread.CurrentCulture.GetFormat(formatType);
+        }
+    }
+}
+```
+
+## Encodings: Converting Between Characters and Bytes
+
+Encode/Decode 发生在strings需要和stream相互转换的时候
+首先介绍CLR中支持的Encoding 类型
+两个最常用的是UTF-16和 UTF-8
+* ■■ UTF-16 encodes each 16-bit character as 2 bytes. It doesn’t affect the characters at all, and no compression occurs—its performance is excellent. UTF-16 encoding is also referred to as *Unicode* encoding. Also note that UTF-16 can be used to convert from little-endian to big-endian and vice versa. -- 每个16位的字符都是2个字节
+* ■■ UTF-8 encodes some characters as 1 byte, some characters as 2 bytes, some characters as 3 bytes, and some characters as 4 bytes. Characters with a value below 0x0080 are compressed to 1 byte, which works very well for characters used in the United States. Characters between 0x0080 and 0x07FF are converted to 2 bytes, which works well for European and Middle Eastern languages. Characters of 0x0800 and above are converted to 3 bytes, which works well for East Asian languages. Finally, surrogate pairs are written out as 4 bytes. UTF-8 is an extremely popular encoding, but it’s less efficient than UTF-16 if you encode many characters with values of 0x0800 or above.
+
+除此之外还有一些不常用的encoding
+* ■■ UTF-32 encodes all characters as 4 bytes. This encoding is useful when you want to write a simple algorithm to traverse characters and you don’t want to have to deal with characters taking a variable number of bytes. For example, with UTF-32, you do not need to think about surrogates because every character is 4 bytes. Obviously, UTF-32 is not an efficient encoding in terms of memory usage and is therefore rarely used for saving or transmitting strings to a file or network. This encoding is typically used inside the program itself. Also note that UTF-32 can be used to convert from little-endian to big-endian and vice versa.
+* ■■ UTF-7 encoding is typically used with older systems that work with characters that can be expressed using 7-bit values. You should avoid this encoding because it usually ends up expanding the data rather than compressing it. The Unicode Consortium has deprecated this encoding.
+* ■■ ASCII encodes the 16-bit characters into ASCII characters; that is, any 16-bit character with a value of less than 0x0080 is converted to a single byte. Any character with a value greater than 0x007F can’t be converted, so that character’s value is lost. For strings consisting of characters in the ASCII range (0x00 to 0x7F), this encoding compresses the data in half and is very fast (because the high byte is just cut off). This encoding isn’t appropriate if you have characters outside of the ASCII range because the character’s values will be lost.
+
+> The Default property returns an object that is able to encode/decode using the user’s code page as specified by the Language For Non-Unicode Programs option of the Region/Administrative dialog box in Control Panel. (See the GetACP Win32 function for more information.) However, using the Default property is discouraged because your application’s behavior would be machine-setting dependent, so if you change the system’s default code page or if your application runs on another machine, your application will behave differently.
+
+Encoding class 里面可以获取到 UTF-16，UTF-8 以及上面提到的不常用的encoding type，另外还有一个Default Encoding, 这个Default Encoding跟机器的设置有关，所以在使用Encoding的时候不要用Default，因为Default有不确定性，可能会让程序出现非预期的结果，所以通常不建议使用。
+
+### Secure String
+
+> Never put the cotents of a secure string into a string
+
+SecureString 没有提供ToString 方法，也不建议将SecureString convert to string，因为这样就会把敏感信息暴露出来
+
+TABLE 14-4 Methods of the Marshal Class for Working with Secure Strings
+--|--
+Method to Decrypt SecureString to Buffer |Method to Zero and Free Buffer
+SecureStringToBSTR |ZeroFreeBSTR
+SecureStringToCoTaskMemAnsi |ZeroFreeCoTaskMemAnsi
+SecureStringToCoTaskMemUnicode |ZeroFreeCoTaskMemUnicode
+SecureStringToGlobalAllocAnsi |ZeroFreeGlobalAllocAnsi
+SecureStringToGlobalAllocUnicode |ZeroFreeGlobalAllocUnicode
+
+使用System.Runtime.InteropServices.Marshal 可以将SecureString 的content解析出来，但是这个类是unsafe code，在编译的时候需要allow unsafe code， 在VS中可以设置 properties-- build -- allow unsafe code 勾选
