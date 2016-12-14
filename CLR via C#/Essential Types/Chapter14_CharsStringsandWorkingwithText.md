@@ -249,9 +249,10 @@ Encoding class 里面可以获取到 UTF-16，UTF-8 以及上面提到的不常�
 
 SecureString 没有提供ToString 方法，也不建议将SecureString convert to string，因为这样就会把敏感信息暴露出来
 
-TABLE 14-4 Methods of the Marshal Class for Working with Secure Strings
---|--
+TABLE--Methods of the Marshal Class for Working with Secure Strings
+
 Method to Decrypt SecureString to Buffer |Method to Zero and Free Buffer
+--|--
 SecureStringToBSTR |ZeroFreeBSTR
 SecureStringToCoTaskMemAnsi |ZeroFreeCoTaskMemAnsi
 SecureStringToCoTaskMemUnicode |ZeroFreeCoTaskMemUnicode
