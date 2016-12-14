@@ -251,12 +251,12 @@ SecureString 没有提供ToString 方法，也不建议将SecureString convert t
 
 TABLE--Methods of the Marshal Class for Working with Secure Strings
 
-Method to Decrypt SecureString to Buffer |Method to Zero and Free Buffer
---|--
-SecureStringToBSTR |ZeroFreeBSTR
-SecureStringToCoTaskMemAnsi |ZeroFreeCoTaskMemAnsi
-SecureStringToCoTaskMemUnicode |ZeroFreeCoTaskMemUnicode
-SecureStringToGlobalAllocAnsi |ZeroFreeGlobalAllocAnsi
-SecureStringToGlobalAllocUnicode |ZeroFreeGlobalAllocUnicode
+Method to Decrypt SecureString to Buffer | Method to Zero and Free Buffer
+--------|---------
+SecureStringToBSTR | ZeroFreeBSTR
+SecureStringToCoTaskMemAnsi | ZeroFreeCoTaskMemAnsi
+SecureStringToCoTaskMemUnicode | ZeroFreeCoTaskMemUnicode
+SecureStringToGlobalAllocAnsi | ZeroFreeGlobalAllocAnsi
+SecureStringToGlobalAllocUnicode | ZeroFreeGlobalAllocUnicode
 
 使用System.Runtime.InteropServices.Marshal 可以将SecureString 的content解析出来，但是这个类是unsafe code，在编译的时候需要allow unsafe code， 在VS中可以设置 properties-- build -- allow unsafe code 勾选
