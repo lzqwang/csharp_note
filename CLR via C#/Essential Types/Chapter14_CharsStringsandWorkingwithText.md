@@ -252,7 +252,7 @@ SecureString 没有提供ToString 方法，也不建议将SecureString convert t
 TABLE--Methods of the Marshal Class for Working with Secure Strings
 
 Method to Decrypt SecureString to Buffer |Method to Zero and Free Buffer
---|--
+-------------------|-----------------
 SecureStringToBSTR |ZeroFreeBSTR
 SecureStringToCoTaskMemAnsi |ZeroFreeCoTaskMemAnsi
 SecureStringToCoTaskMemUnicode |ZeroFreeCoTaskMemUnicode
