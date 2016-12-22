@@ -122,3 +122,58 @@ Field Type | Description
 \_target | System.Object When the delegate object wraps a static method, this field is null. When the delegate objects wraps an instance method, this field refers to the object that should be operated on when the callback method is called. In other words, this field indicates the value that should be passed for the instance method’s implicit this parameter.
 \_methodPtr |System.IntPtr An internal integer the CLR uses to identify the method that is to be called back.
 \_invocationList | System.Object This field is usually null. It can refer to an array of delegates when building a delegate chain (discussed later in this chapter).
+
+注意使用static method和instance method的区别体现在 \_target 这里，static method 的target 是null，而instance method的target就是instance对象
+
+## Using Delegates to Call Back Many Methods (Chaining)
+
+委托链表，一个委托对象中可以绑定多个回调函数，上面的表中第三个field \_invocationList 用来绑定多个回调函数
+可以使用 Delegate.Combine 方法或者直接使用 + 运算符 来增加一个回调函数
+使用 Delegate.Remove 方法或则会 -= 运算符 可以删除一个回调函数
+
+>When the　loop is complete, the result variable will contain only the result of the last delegate called (previous　return values are discarded); this value is returned to the code that called Invoke.
+
+如果委托是有返回值的，那么委托链表中的最后一个回调函数的返回值会成为整个委托链表的返回值，如果想要获取每个回调函数的返回值，需要遍历每一个委托链表中的回调函数然后将返回值缓存起来。
+另外如果委托链中有一个回调函数出现异常，那么会影响到后续的回调函数的执行。
+C#中为了规避这些问题，提供了 GetInvocationList的方法可以返回所有的回调函数，然后依次运行回调函数，这个时候就可以自定义一些返回值和异常处理的逻辑
+
+## Generic Delegates
+
+FCL中提供了一系列有返回值和无返回值的泛型委托，这样在实际开发过程中使用FCL中的委托类型就可以了 不需要自己定义
+```
+public delegate void Action(); // OK, this one is not generic
+public delegate void Action<T>(T obj);
+public delegate void Action<T1, T2>(T1 arg1, T2 arg2);
+public delegate void Action<T1, T2, T3>(T1 arg1, T2 arg2, T3 arg3);
+...
+public delegate void Action<T1, ..., T16>(T1 arg1, ..., T16 arg16);
+
+public delegate TResult Func<TResult>();
+public delegate TResult Func<T, TResult>(T arg);
+public delegate TResult Func<T1, T2, TResult>(T1 arg1, T2 arg2);
+public delegate TResult Func<T1, T2, T3, TResult>(T1 arg1, T2 arg2, T3 arg3);
+...
+public delegate TResult Func<T1,..., T16, TResult>(T1 arg1, ..., T16 arg16);
+```
+
+> When using delegates that take generic arguments and return values, contra-variance and covariance come into play, and it is recommended that you always take advantage of these features because they have no ill effects and enable your delegates to be used in more scenarios
+
+使用泛型委托的时候，注意巧用参数和返回值的协变与逆变
+
+
+## C#’s Syntactical Sugar for Delegates
+
+* Syntactical Shortcut #1: No Need to Construct a Delegate Object -- 可以不定义delegate对象，直接把回调函数当作参数传递
+* Syntactical Shortcut #2: No Need to Define a Callback Method (Lambda Expressions) -- 除了不定delegate对象，回调函数甚至都可以不定义，使用lambda 表达式 搞定
+* Syntactical Shortcut #3: No Need to Wrap Local Variables in a Class Manually to Pass Them to a Callback Method -- callback方法中可以直接使用已经定义好的变量，不需要再把这些变量传递给回调函数中。 这里lambda 表达式中可以直接使用外面定义的变量，而如果不使用lambda表达式而是另外一个方法的话，就必须通过一个helper class将这些变量传递给这个方法中。 实际上，CLR在编译lambda表达式的时候也确实是按照这样的方式来重写了这里的代码
+
+Lambda 表达式的出现一定程度上成全了C#的在使用委托的时候可以使用的语法糖，但是lambda表达式也不能不分场合的滥用，一般来讲代码只被引用一次而且代码行数不超过3行的情况下，使用lambda表达式是很合适的
+
+## Delegates and reflection
+
+可以通过反射来动态获取委托类型，同时提供了动态调用的方法，
+> Using reflection APIs, you must first acquire a MethodInfo object referring to the method you want to create a delegate to. Then, you call the CreateDelegate method to have it construct a new object of a Delegate-derived type identified by the first parameter, delegateType.
+
+>System.Delegate’s DynamicInvoke method allows you to invoke a delegate object’s callback method, passing a set of parameters that you determine at run time. When you call DynamicInvoke,it internally ensures that the parameters you pass are compatible with the parameters the callback method expects. If they’re compatible, the callback method is called. If they’re not, an ArgumentException is thrown. DynamicInvoke returns the object the callback method returned
+
+Delegate与Reflection结合的情况下，通常不能明确的获取delegate的实际返回值或参数，这个时候使用 DynamicInvoke 方法，可以在运行时调用委托的回调函数，当然如果回调函数的参数和传进去的参数不匹配的话， ArgumentException 会抛出。这个方法在介绍 Event篇章中自定义的EventSet 中得到了实际应用。
