@@ -167,15 +167,24 @@ C#中需要使用 += 和  -= 来添加和删除委托，不能显示的使用 ad
 
   上面提到了C#在解析event的时候，要生成很多的代码包括一个私有的委托，两个accessor method，而在C# winform以及asp.net等技术中，每个类都会有很多events而且这些event有可能是程序员不会调用的，如果是为每个event都单独声明，那么编译器编译出来的代码会很多，造成不必要的损耗，为了解决这一问题，C#内部提供了 Explicitly Implementng Event的模式。
   其实这个显示实现就是为event显式的定义add和remove的accessor methods，而不是由编译器自动来生成，但是这样跟自动生成相比会少一个委托的定义，这时候就需要借助于其他的方式来实现，定义一个EventSet 类，将所有的事件都在一个dictionary<eventKey,eventDelegate>中保存，eventKey用来唯一标识event， eventDelegate对应的是event的委托方法，可以对此delegate进行删除添加方法，也可以根据给定的eventKey调用对应的delegate
+
+  *显式的实现event的add/remove 方法可以减少编译器生成的中间代码量，尤其是需要多个event的时候效果尤其显著*
   使用这种方式重新定义NewMail
   ```
   //m_eventSet 是用于add/remove delegate的工具类
-  private EventSet m_eventSet= new EventSet();
+  private EventSet m_eventSet= new EventSet();   //使用EventSet 可以在这个Dictionary中保存多个event， 每一个event都可以按照newMail的实现方式，定义1.eventkey，2.event， 3.event触发方法
+  #region New Mail event, if more events needed, repeat these steps
+  private EventKey newMail_EventKey = new EventKey();
   public event EventHandler<NewMailEventArgs> NewMail
   {
-    add { m_eventSet.Add(s_fooEventKey, value); }
-    remove { m_eventSet.Remove(s_fooEventKey, value); }
+    add { m_eventSet.Add(newMail_EventKey, value); }
+    remove { m_eventSet.Remove(newMail_EventKey, value); }
   }
+  public void RaiseNewMail(NewMailEventArgs args)  
+  {
+    m_eventSet.Raise(newMail_EventKey,args);
+  }
+  #endregion
 
   // EventSet定义如下，　其中考虑到了Thread-Safe的情况，是与微软原生的实现不同的地方
   // This class exists to provide a bit more type safety and
@@ -229,4 +238,4 @@ C#中需要使用 += 和  -= 来添加和删除委托，不能显示的使用 ad
   }  
   ```
 
-  对于其他要注册到NewMail事件上的类，它们是不知道event是隐式的通过编译器实现的或者是程序员自己显式的实现的。因为注册或者删除的方法还是使用 += / -= 
+  对于其他要注册到NewMail事件上的类，它们是不知道event是隐式的通过编译器实现的或者是程序员自己显式的实现的。因为注册或者删除的方法还是使用 += / -=
