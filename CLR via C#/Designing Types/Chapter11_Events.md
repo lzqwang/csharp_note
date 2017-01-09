@@ -12,10 +12,8 @@ A type that defines an event member allows the type (or instances of the type) t
   作者使用一个EmailManager 接受邮件，Fax和Printer注册方法到EmailManger的event 这样的一个例子，用来详解Event
 
 ##  Designing a Type That Exposes an Event
-
-  1. *Step #1 定义Event中用来存放额外信息的类 EventArgs*
-  这个Type需要继承在System.EventArgs， 在EmailManager这个例子中，定义一个NewEmailEventArgs
-  ```
+**Step #1 定义Event中用来存放额外信息的类 EventArgs*  这个Type需要继承在System.EventArgs， 在EmailManager这个例子中，定义一个NewEmailEventArgs**
+```C#
   // Step #1: Define a type that will hold any additional information that
   // should be sent to receivers of the event notification
   internal class NewMailEventArgs : EventArgs {
@@ -27,42 +25,40 @@ A type that defines an event member allows the type (or instances of the type) t
     public String To { get { return m_to; } }
     public String Subject { get { return m_subject; } }
   }
-  ```
-  如果不需要额外的信息，可以使用EventArgs.Empty 而不要New一个EventArgs对象
-  2. *Step #2: Define the event member*
+```
+如果不需要额外的信息，可以使用EventArgs.Empty 而不要New一个EventArgs对象
+
+**Step #2: Define the event member**
   event member 顾名思义是event类型的member，需要用event关键字来声明，同时需要用一个delegate type来声明event的method类型，下面是一个例子
-  ```
+ ```C#
   internal class MailManager {
     // Step #2: Define the event member
     public event EventHandler<NewMailEventArgs> NewMail;
     ...
   }
-  ```
-  NewMail的类型是EventHandler<NewMailEventArgs>，也就是说注册到NewMail上的方法必须定义的跟EventHandler<NewMailEventArgs> 委托类型一样
-  EventHandler的定义如下
-  ```
+```
+NewMail的类型是EventHandler<NewMailEventArgs>，也就是说注册到NewMail上的方法必须定义的跟EventHandler<NewMailEventArgs> 委托类型一样EventHandler的定义如下
+``` C#
   public delegate void EventHandler<TEventArgs>(Object sender, TEventArgs e);
-  ```
-  下面是一个注册到event上的method的例子
-  ```
+```
+ 下面是一个注册到event上的method的例子
+ ```C#
   void MethodName(Object sender, NewMailEventArgs e);
-  ```
-  关于委托方法的第一个参数为何设计成Object，基于两方面考虑，一来是考虑到类的继承，反正都需要类型转换，干脆把参数定义为最基的类。二来是这样可以是这个方法重用性更高，而不限于父类与子类之间. 至于第二个参数 e， 第一步中提到了用于提供额外的一些信息，虽然有的时候不需要额外的信息，可能多加这个参数显得有些多余，但是这就是事件的模式，VS自动生成的一些event 方法中经常能看到这种样式的写法，遵循这一模式，可以编译开发者更容易的掌握event
-
-  > the event pattern requires all event handlers to have a return type of void. This is necessary because raising an event might call several callback methods, and there is no way to get the return values from all of them.
-
-  3. *Step #3 定义方法用来让event通知已经注册的方法event发生了*
+ ```
+ 关于委托方法的第一个参数为何设计成Object，基于两方面考虑，一来是考虑到类的继承，反正都需要类型转换，干脆把参数定义为最基的类。二来是这样可以是这个方法重用性更高，而不限于父类与子类之间. 至于第二个参数 e， 第一步中提到了用于提供额外的一些信息，虽然有的时候不需要额外的信息，可能多加这个参数显得有些多余，但是这就是事件的模式，VS自动生成的一些event 方法中经常能看到这种样式的写法，遵循这一模式，可以编译开发者更容易的掌握event 
+ 
+**Step#3  定义方法用来让event通知已经注册的方法event发生了**
   下面是实现的代码，注意这里考虑了Thread-Safe,防止NewMail在其他线程中被设置为null
-  ```
+  ```c#
   protected virtual void OnNewMail(NewMailEventArgs e) {
     EventHandler<NewMailEventArgs> temp = Volatile.Read(ref NewMail);
     if (temp != null) temp(this, e);
   }
   ```
 
-  4. *Step #4 定义一个方法，将信息传给event*
+**Step #4 定义一个方法，将信息传给event**
   需要定义一个方法来调用上一步中实现的方法
-  ```
+  ```C#
   // Step #4: Define a method that translates the
   // input into the desired event
   public void SimulateNewMail(String from, String to, String subject) {
@@ -80,7 +76,7 @@ A type that defines an event member allows the type (or instances of the type) t
 ## How the Compiler implements an event
 
   编译器是如何解析Event的， 当编译器发现一个event的声明，会将这个event声明解析为3个部分
-```
+```C#
 //Event
 public event EventHandler<NewMailEventArgs> NewMail;
 
@@ -128,8 +124,8 @@ public void remove_NewMail(EventHandler<NewMailEventArgs> value) {
 
 ## Designing a Type That Listens for an Event
 
-    下面的代码是注册到Event的委托所在的类的实现
-    ```
+下面的代码是注册到Event的委托所在的类的实现
+```c#
     internal sealed class Fax {
       // Pass the MailManager object to the constructor
       public Fax(MailManager mm) {
@@ -158,7 +154,7 @@ public void remove_NewMail(EventHandler<NewMailEventArgs> value) {
         mm.NewMail -= FaxMsg;
       }
     }
-    ```
+```
 > C# requires your code to use the += and -= operators to add and remove delegates from the list. If you try to call the add or remove method explicitly, the C# compiler produces the CS0571 cannot explicitly call operator or accessor error message
 
 C#中需要使用 += 和  -= 来添加和删除委托，不能显示的使用 add_Xxx 和 remove_xxx , 但是其他不支持Event的编程语言没有重载 += 和 -= 的话，可以直接调用 add 和 remove方法
@@ -170,7 +166,7 @@ C#中需要使用 += 和  -= 来添加和删除委托，不能显示的使用 ad
 
   *显式的实现event的add/remove 方法可以减少编译器生成的中间代码量，尤其是需要多个event的时候效果尤其显著*
   使用这种方式重新定义NewMail
-  ```
+  ```C#
   //m_eventSet 是用于add/remove delegate的工具类
   private EventSet m_eventSet= new EventSet();   //使用EventSet 可以在这个Dictionary中保存多个event， 每一个event都可以按照newMail的实现方式，定义1.eventkey，2.event， 3.event触发方法
   #region New Mail event, if more events needed, repeat these steps
