@@ -7,7 +7,8 @@
 
 ## System.Exception
 
-TABLE 20-1 Public Properties of the System.Exception Type
+Public Properties of the System.Exception Type
+
 Property |Access |Type |Description
 ----|---|---|-------
 Message |Read-only |String |Contains helpful text indicating why the exception was thrown. The message is typically written to a log when a thrown exception is unhandled. Because end users do not see this message, the message should be as technical as possible so that developers viewing the log can use the information in the message to fix the code when producing a new version.
@@ -16,8 +17,7 @@ Source |Read/write |String |Contains the name of the assembly that generated the
 StackTrace |Read-only |String |Contains the names and signatures of methods called that led up to the exception being thrown. This property is **invaluable** for debugging.
 TargetSite |Read-only |MethodBase |Contains the method that threw the exception.
 HelpLink |Read-only |String |Contains a URL (such as file://C:\MyApp\Help.htm#MyExceptionHelp) to documentation that can help a user understand the exception. Keep in mind that sound programming and security practices prevent users from ever being able to see raw unhandled exceptions, so unless you are trying to convey information to other programmers, this property is seldom used.
-InnerException |Read-only |Exception |Indicates the previous exception if the current exception were raised while handling an exception. This read-only property is usually null. The Exception type also offers a public GetBaseException method that traverses the linked list of inner exceptions and returns the
-originally thrown exception.
+InnerException |Read-only |Exception |Indicates the previous exception if the current exception were raised while handling an exception. This read-only property is usually null. The Exception type also offers a public GetBaseException method that traverses the linked list of inner exceptions and returns the originally thrown exception.
 HResult |Read/write |Int32 |A 32-bit value that is used when crossing managed and native code boundaries. For example, when COM APIs return failure HRESULT values, the CLR throws an Exception-derived object and maintains
 
 > Important When you throw an exception, the CLR resets the starting point for the exception; that is, the CLR remembers only the location where the most recent exception object was thrown.
@@ -61,7 +61,7 @@ private void SomeMethod() {
 可以为method 指定 特定MethodImpl Attribute 让编译器不inlime method
 
 ## FCL-Defined Exception classes
-
+```
 System.Exception
   System.AggregateException
   System.ApplicationException
@@ -170,7 +170,7 @@ System.Exception
     System.Security.XmlSyntaxException
   System.Threading.Tasks.TaskSchedulerException
   System.TimeZoneNotFoundException   
-
+```
   关于System.Exception的继承 最初的设计是 只有两个type继承分别是System.SystemException 和 System.ApplicationException
   但是实际上这个规定 Microsoft自己也没有遵守，导致了好多exception class继承的不对，结果最初设计的这两个exception type显得没有什么意义了，但是又不能删掉了，因为有的用户已经继承自这两个type了
 
